@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+			<title>Getting Started</title>
+		
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		<link rel="icon" type="image/png" href="../../_static/icon.png"/>
+		<link rel="stylesheet" href="../../_static/site.css" type="text/css" media="screen"/>
+		
+		<script src="../../_components/jquery/jquery.min.js"></script>
+		<script src="../../_components/jquery-syntax/jquery.syntax.min.js"></script>
+		
+		<script src="../../_static/links.js"></script>
+		
+		<script type="text/javascript">
+		//<![CDATA[
+			jQuery(function($) {
+				$.syntax();
+			});
+		//]]>
+		</script>
+	</head>
+
+	<body>
+		<header> › <a class="link" href="../../index.html">Project</a> › <a class="link" href="../index.html">Guides</a></header>
+		
+		<main>
+			
+	<h1>Getting Started</h1>
+	
+	<p>This guide explains how to use <code>console</code> for logging.</p>
+<section id="installation"><h2>Installation</h2>
+<p>Add the gem to your project:</p>
+<pre><code class="language-bash">$ bundle add console
+</code></pre>
+</section><section id="core-concepts"><h2>Core Concepts</h2>
+<p><code>console</code> has several core concepts:</p>
+<ul>
+<li>A log message which consists of a set of arguments and options, which includes a timestamp, severity, and other structured data.</li>
+<li>A <a href="../../source/Console/Logger/index.html" title="Console::Logger"><code class="language-ruby">class Console::Logger</code></a> instance which is the main entry point for logging for a specific system and writes data to a given output formatter.</li>
+<li>An output instance such as <code class="language-ruby">Console::XTerm</code>, <a href="../../source/Console/Serialized/Logger/index.html" title="Console::Serialized::Logger"><code class="language-ruby">class Console::Serialized::Logger</code></a> which formats these log messages and writes them to a specific output device.</li>
+<li>An event instance, such as <a href="../../source/Console/Event/Progress/index.html" title="Console::Event::Progress"><code class="language-ruby">class Console::Event::Progress</code></a> or <a href="../../source/Console/Event/Spawn/index.html" title="Console::Event::Spawn"><code class="language-ruby">class Console::Event::Spawn</code></a> which represents a structured event within a system, which can be formatted in a specific way.</li>
+</ul>
+</section><section id="basic-logging"><h2>Basic Logging</h2>
+<p>Out of the box, <a href="../../source/Console/index.html#Console.logger" title="Console.logger"><code class="language-ruby">Console.logger</code></a> is a globally shared logger that outputs to the current terminal via <code>stderr</code>.</p>
+<pre><code class="language-ruby">require 'console'
+
+Console.logger.info(&quot;Hello World&quot;)
+</code></pre>
+<pre>
+<font color="#00AA00">  0.0s     info:</font> <b>Hello World</b> <font color="#717171">[pid=219113] [2020-08-08 12:21:26 +1200]</font>
+</pre>
+<p>The method name <code>info</code> indicates the severity level of the log message. You can filter out severity levels, and by default, <code>debug</code> messages are filtered out. Here are some examples of the different log levels:</p>
+<pre><code class="language-ruby">require 'console'
+
+Console.logger.debug(&quot;The input voltage has stabilized.&quot;)
+Console.logger.info(&quot;Making a request to the machine.&quot;)
+Console.logger.warn(&quot;The machine has detected a temperature anomaly.&quot;)
+Console.logger.error(&quot;The machine was unable to complete the request!&quot;)
+Console.logger.fatal(&quot;Depressurisation detected, evacuate the area!&quot;)
+</code></pre>
+<p>From the terminal, you can control the log level using the <code>CONSOLE_LEVEL</code> environment variable. To log all messages including <code>debug</code>:</p>
+<pre><code class="language-bash">$ CONSOLE_LEVEL=debug ./machine
+</code></pre>
+<p>Alternatively to restrict log messages to warnings and above:</p>
+<pre><code class="language-bash">$ CONSOLE_LEVEL=warn ./machine
+</code></pre>
+<p>If otherwise unspecified, Ruby's standard <code>$DEBUG</code> and <code>$VERBOSE</code> global variables will be checked and adjust the log level appropriately.</p>
+</section><section id="subject-logging"><h2>Subject Logging</h2>
+<p>The first argument to the log statement becomes the implicit subject of the log message.</p>
+<pre><code class="language-ruby">require 'console'
+
+class Machine
+	include Console
+	
+	def initialize(voltage)
+		@voltage = voltage.floor
+		logger.info(self, &quot;The input voltage has stabilized.&quot;)
+	end
+end
+
+Machine.new(5.5)
+</code></pre>
+<p>The given subject, in this case <code>self</code>, is used on the first line, along with associated metadata, while the message itself appears on subsequent lines:</p>
+<pre>
+<font color="#00AA00">  0.0s     info:</font> <b>Machine</b> <font color="#717171">[oid=0x3c] [pid=219041] [2020-08-08 12:17:33 +1200]</font>
+               | The input voltage has stabilized.
+</pre>
+<p>If you want to disable log messages which come from this particular class, you can execute your command:</p>
+<pre><code class="language-bash">$ CONSOLE_FATAL=Machine ./machine
+</code></pre>
+<p>This will prevent any log message which has a subject of class <code>Machine</code> from logging messages of a severity less than <code>fatal</code>.</p>
+</section><section id="exception-logging"><h2>Exception Logging</h2>
+<p>If your code has an unhandled exception, you may wish to log it. In order to log a full backtrace, you must log the subject followed by the exception.</p>
+<pre><code class="language-ruby">require 'console'
+
+class Cache
+	include Console
+	
+	def initialize
+		@entries = {}
+	end
+	
+	def fetch(key)
+		@entries.fetch(key)
+	rescue =&gt; error
+		logger.failure(self, error)
+	end
+end
+
+Cache.new.fetch(:foo)
+</code></pre>
+<p>This will produce the following output:</p>
+<pre><font color="#AA0000">  0.0s    fatal:</font> <b>Cache</b> <font color="#717171">[oid=0x3c] [pid=220776] [2020-08-08 14:10:00 +1200]</font>
+               |   <font color="#AA0000"><b>KeyError</b></font>: key not found: :foo
+               |   → <font color="#AA0000">cache.rb:11</font> in 'fetch'
+               |     <font color="#AA0000">cache.rb:11</font> in 'fetch'
+               |     <font color="#AA0000">cache.rb:17</font> in '&lt;main&gt;'
+</pre>
+</section><section id="program-structure"><h2>Program Structure</h2>
+<p>Generally, all programs should use the global <code>Console.logger</code> instance.</p>
+<p>The per-class <code>include Console</code> allows you to</p>
+<p>All programs should generally use the global <code>Console.logger</code> instance.</p>
+<p>Generally, individual classes should not be catching and logging exceptions.</p>
+<p>Generally, individual classes should not be catching and logging exceptions. It makes for simpler code if this is handled in a few places near the top of your program. Exceptions should collect enough information such that logging them produces a detailed backtrace leading to the failure.</p>
+</section>
+				
+			<footer>Documentation generated by <a href="https://github.com/socketry/utopia-project">Utopia::Project</a>.</footer>
+		</main>
+	</body>
+</html>
