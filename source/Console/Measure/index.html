@@ -25,7 +25,7 @@
 	</head>
 
 	<body>
-		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="http://localhost:38157/source/index">Source</a></header>
+		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="http://localhost:34927/source/index">Source</a></header>
 		
 		<main>
 			
@@ -36,21 +36,21 @@
 	<section>
 	<h2>Definitions</h2>
 	
-	<section id="Console::Measure#duration"><h3><code class="language-ruby">def duration(name, **tags, &amp;block)</code></h3><p>Measure the execution of a block of code.</p>
+	<section id="Console::Measure#duration"><h3><code class="language-ruby">def duration(name, &amp;block)</code></h3><p>Measure the execution of a block of code.</p>
 <details>
 						<summary><h4>Implementation</h4></summary>
-						<pre><code class="language-ruby">def duration(name, **tags, &amp;block)
+						<pre><code class="language-ruby">def duration(name, &amp;block)
 	@output.info(@subject) {Event::Enter.new(name)}
 	
 	start_time = Clock.now
 	
-	yield
+	result = yield(self)
 	
 	duration = Clock.now - start_time
 	
-	@output.info(@subject) {Event::Exit.new(name, duration, **tags)}
+	@output.info(@subject) {Event::Exit.new(name, duration, **@tags)}
 	
-	return duration
+	return result
 end</code></pre>
 					</details></section>	</section>
 
