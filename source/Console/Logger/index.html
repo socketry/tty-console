@@ -25,7 +25,7 @@
 	</head>
 
 	<body>
-		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="http://localhost:41159/source/index">Source</a></header>
+		<header> › <a class="link" href="../../../index.html">Project</a> › <a class="link" href="http://localhost:45117/source/index">Source</a></header>
 		
 		<main>
 			
@@ -42,7 +42,7 @@ https://mislav.net/2011/06/ruby-verbose-mode/ has more details about how it all 
 <details>
 						<summary><h4>Implementation</h4></summary>
 						<pre><code class="language-ruby">def self.default_log_level(env = ENV)
-	if level = (env['CONSOLE_LEVEL'] || env['CONSOLE_LOG_LEVEL'])
+	if level = env['CONSOLE_LEVEL']
 		LEVELS[level.to_sym] || level.to_i
 	elsif $DEBUG
 		DEBUG
